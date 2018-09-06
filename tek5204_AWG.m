@@ -98,17 +98,17 @@ classdef tek5204_AWG < handle
             obj.setmarkerchannel(channel, waveform.nummarkerchannels); 
         end
 
-        function outputseq(obj, channel, seqlist, seqname)
+        function outputseq(obj, channel, sequence)
             % Set the built sequence into the specified channel
             % 1 means track 1 of the sequence
-            obj.send('SOURce%d:CASSet:SEQuence "%s",1', channel, seqname);
+            obj.send('SOURce%d:CASSet:SEQuence "%s",1', channel, sequence.name);
             
             % Look at the number of channels that each constituent waveform
             % in the sequence has and then find the maximum and set that as
             % the number of marker channels.
-            markerchannellist = zeros(1, length(seqlist));
-            for i=1:length(seqlist)
-                markerchannellist(i) = seqlist{i}.nummarkerchannels;
+            markerchannellist = zeros(1, length(sequence.seqlist));
+            for i=1:length(sequence.seqlist)
+                markerchannellist(i) = sequence.seqlist{i}.nummarkerchannels;
             end
             obj.setmarkerchannel(channel, max(markerchannellist));
         end
@@ -197,14 +197,14 @@ classdef tek5204_AWG < handle
 
             % Create a new sequence with the specified name and number of steps
             % The last 1 means we're creating a sequence with only 1 track
-            obj.send('SLISt:SEQuence:NEW "%s",%d,1', sequence.seqname, nSegments)
+            obj.send('SLISt:SEQuence:NEW "%s",%d,1', sequence.name, nSegments)
 
             for segment = 1:nSegments
                 % Assign the segment-th waveform to the segment-th step
                 % The 1 in the TASSet means we're assigning to track 1 of the sequence
-                obj.send('SLISt:SEQuence:STEP%d:TASSet1:WAVeform "%s","%s"', segment, sequence.seqname, sequence.seqlist{segment}.name)
+                obj.send('SLISt:SEQuence:STEP%d:TASSet1:WAVeform "%s","%s"', segment, sequence.name, sequence.seqlist{segment}.name)
                 % Assign the number of repeats to the segment-th stepFGEN
-                obj.send('SLISt:SEQuence:STEP%d:RCOunt "%s",%d', segment, sequence.seqname, sequence.replist(segment))
+                obj.send('SLISt:SEQuence:STEP%d:RCOunt "%s",%d', segment, sequence.name, sequence.replist(segment))
             end
         end
 
@@ -229,7 +229,7 @@ classdef tek5204_AWG < handle
             end
             srateseq = max(srateseq);
 
-            obj.send('SLISt:SEQuence:SRATe "%s",%d', sequence.seqname, srateseq)
+            obj.send('SLISt:SEQuence:SRATe "%s",%d', sequence.name, srateseq)
 
             % Check for error
             obj.errorcheck();
@@ -254,7 +254,7 @@ classdef tek5204_AWG < handle
             obj.send('SOURce%d:RMODe %s', channel, rmode);
         end
         
-        function setseqrunmode(obj, seqlist, seqname, rmode, varargin)
+        function setseqrunmode(obj, sequence, rmode, varargin)
             % Sets the running and triggering mode for a particular sequence 
             % by assigning  triggers/jumps to the first and last steps.
 
@@ -263,14 +263,14 @@ classdef tek5204_AWG < handle
                     trigsource = varargin{1};
                     % Set the 1st step to be triggered by the given trigger source
                     % trigsource: 'ATRigger', 'BTRigger', 'ITRigger', 'OFF'
-                    obj.send('SLISt:SEQuence:STEP1:WINPut "%s",%s', seqname, trigsource);
+                    obj.send('SLISt:SEQuence:STEP1:WINPut "%s",%s', sequence.name, trigsource);
                     % Set the last step to jump back to the 1st step and wait for trigger
-                    obj.send('SLISt:SEQuence:STEP%d:GOTO "%s",1', length(seqlist), seqname);
+                    obj.send('SLISt:SEQuence:STEP%d:GOTO "%s",1', length(sequence.seqlist), sequence.name);
                 case {'CONT', 'CONTINUOUS'}
                     % Set the first step to not wait for anything\
-                    obj.send('SLISt:SEQuence:STEP1:WINPut "%s",OFF', seqname);
+                    obj.send('SLISt:SEQuence:STEP1:WINPut "%s",OFF', sequence.name);
                     % Set the last step to jump back to the 1st step and immediately repeat
-                    obj.send('SLISt:SEQuence:STEP%d:GOTO "%s",1', length(seqlist), seqname);
+                    obj.send('SLISt:SEQuence:STEP%d:GOTO "%s",1', length(sequence.seqlist), sequence.name);
                 otherwise
                     error('Invalid running mode!')
             end

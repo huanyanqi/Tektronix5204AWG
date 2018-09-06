@@ -3,7 +3,7 @@ fgen.open();
 
 % Args are: Waveform name, timestep/s, total time/us
 % Create a 2 rectangular pulses in a total length of 1.
-thinrecpulse = arbseq_class('thinrecpulse', 0.0001, 1); 
+thinrecpulse = arbseq_class('thinrecpulse', 1E-8, 100); 
 thinrecpulse.seqtype = 'rectangular';
 thinrecpulse.pulseref = 'edge';
 thinrecpulse.widths = [0.1 0.1];
@@ -14,7 +14,7 @@ thinrecpulse.createsequence;
 % Marker 2 is out of phase with marker 1.
 thinrecpulse.nummarkerchannels = 2;
 for i=1:length(thinrecpulse.ydata)
-    if mod(floor(i/1000), 2)==0
+    if mod(floor(i/1), 2)==0
         thinrecpulse.markerdata(1, i) = 1;
     else
         thinrecpulse.markerdata(2, i) = 1;
@@ -22,7 +22,7 @@ for i=1:length(thinrecpulse.ydata)
 end
 
 % Create a fat gaussian pulse with width 1.5 in a total length of 5.
-gaussianpulse = arbseq_class('gaussianpulse', 0.0001, 5);
+gaussianpulse = arbseq_class('gaussianpulse', 1E-8, 500);
 gaussianpulse.seqtype = 'gaussian';
 gaussianpulse.pulseref = 'center';
 gaussianpulse.widths = [1.5];
@@ -50,7 +50,7 @@ disp('Done!');
 % Format: 
 % name - string indiciating the sequence's name
 % seqlist - cell array of the constituent waveforms
-% repistli - matrix of the number of repeats of the constituent waveforms
+% replist - matrix of the number of repeats of the constituent waveforms
 periodicrecseq.name = 'periodicrecseq';
 periodicrecseq.seqlist = {thinrecpulse};
 periodicrecseq.replist = [5];
@@ -63,13 +63,13 @@ mixseq.replist = [1, 1, 2];
 fgen.sendandloadarbseq(mixseq);
 
 % Set channel 1 to output the periodic rectangular and set trigger to A.
-fgen.outputseq(1, periodicrecseq, 'periodicrecseq');
-fgen.setseqrunmode(periodicrecseq, 'periodicrecseq', 'TRIGGERED', 'ATRigger');
+fgen.outputseq(1, periodicrecseq);
+fgen.setseqrunmode(periodicrecseq, 'TRIGGERED', 'ATRigger');
 fgen.output(1, 'ON');
 
 % Set channel 2 to output the mixed sequence and set trigger to B.
-fgen.outputseq(2, mixseq, 'mixseq');
-fgen.setseqrunmode(mixseq, 'mixseq', 'TRIGGERED', 'BTRigger');
+fgen.outputseq(2, mixseq);
+fgen.setseqrunmode(mixseq, 'TRIGGERED', 'BTRigger');
 fgen.output(2, 'ON');
 
 % Manually trigger the triggers.

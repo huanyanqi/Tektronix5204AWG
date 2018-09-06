@@ -19,7 +19,7 @@ classdef arbseq_class < handle
         
         totaltime = 10; %total time
         timestep = 0.01;
-        timeexp = 1;%1E-6; %use to get absolute time i.e. timeexp = 1e-6, time is in us.
+        timeexp = 1E-6; %use to get absolute time i.e. timeexp = 1e-6, time is in us.
         srate
         
         cutoff = 0.05
